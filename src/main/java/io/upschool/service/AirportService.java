@@ -22,6 +22,10 @@ public class AirportService {
                 .map(AirportService::getAirportResponse).toList();
     }
 
+    public Airport getAirport(Long airportId) {
+        return airportRepository.findById(airportId).orElseThrow(() -> new AirportException(AirportException.DATA_NOT_FOUND));
+    }
+
     @Transactional
     public AirportResponse createAirport(AirportRequest airportRequest) {
         checkIfExist(airportRequest);
@@ -32,10 +36,6 @@ public class AirportService {
     public List<AirportResponse> findAirportByName(String name) {
         List<Airport> airportList = airportRepository.findAirportByNameContainingIgnoreCase(name);
         return airportList.stream().map(AirportService::getAirportResponse).toList();
-    }
-
-    public Airport getAirport(Long airportId) throws AirportException {
-        return airportRepository.findById(airportId).orElseThrow(() -> new AirportException(AirportException.DATA_NOT_FOUND));
     }
 
     private static Airport getAirport(AirportRequest airportRequest) {
@@ -56,6 +56,6 @@ public class AirportService {
 
     private void checkIfExist(AirportRequest airportRequest) {
         boolean exist = airportRepository.existsByNameAndLocationContainingIgnoreCase(airportRequest.getName(), airportRequest.getLocation());
-        if (exist) throw new AirportException(AirportException.AIRPORT_EXIST);
+        if (Boolean.TRUE == (exist)) throw new AirportException(AirportException.AIRPORT_EXIST);
     }
 }

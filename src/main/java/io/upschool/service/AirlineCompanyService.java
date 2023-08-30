@@ -2,13 +2,12 @@ package io.upschool.service;
 
 import io.upschool.dto.airlineCompanyDto.AirlineCompanyRequest;
 import io.upschool.dto.airlineCompanyDto.AirlineCompanyResponse;
-import io.upschool.dto.flightDto.FlightRequest;
 import io.upschool.dto.flightDto.AirlineFlightResponse;
-import io.upschool.exceptions.AirlineCompanyException;
+import io.upschool.dto.flightDto.FlightRequest;
 import io.upschool.entity.AirlineCompany;
 import io.upschool.entity.Route;
+import io.upschool.exceptions.AirlineCompanyException;
 import io.upschool.repository.AirlineCompanyRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +23,7 @@ public class AirlineCompanyService {
     public List<AirlineCompanyResponse> getAllAirlineCompanies() {
         return airlineCompanyRepository.findAll()
                 .stream()
-                .map(AirlineCompanyService::getAirlineCompanyResponse)
+                .map(this::getAirlineCompanyResponse)
                 .toList();
     }
 
@@ -32,11 +31,10 @@ public class AirlineCompanyService {
         List<AirlineCompany> airlineCompanies = airlineCompanyRepository.findAirlineCompaniesByNameContainingIgnoreCase(name);
         return airlineCompanies
                 .stream()
-                .map(AirlineCompanyService::getAirlineCompanyResponse)
+                .map(this::getAirlineCompanyResponse)
                 .toList();
     }
 
-    // findById kullanılmadan yapılabilir mi? Örneğin existById ile kontrol edip, getReferenceById kullansam??
     public List<AirlineFlightResponse> getAllFlightsByAirlineCompanyId(Long id) {
         AirlineCompany airlineCompany = airlineCompanyRepository.findById(id)
                 .orElseThrow(() -> new AirlineCompanyException(AirlineCompanyException.DATA_NOT_FOUND));
@@ -61,13 +59,12 @@ public class AirlineCompanyService {
     }
 
     public AirlineFlightResponse createFlightOnAirline(Long id, FlightRequest flightRequest) {
-//        AirlineCompany airlineCompany = airlineCompanyRepository.findById(id)
-//                .orElseThrow(() -> new AirlineCompanyException(AirlineCompanyException.DATA_NOT_FOUND));
         checkIfExist(id);
         AirlineCompany airline = airlineCompanyRepository.getReferenceById(id);
         Route route = routeService.getRoute(flightRequest.getRouteId());
         return getAirlineFlightResponse(flightRequest, airline, route);
     }
+
 
     private AirlineFlightResponse getAirlineFlightResponse(FlightRequest flightRequest, AirlineCompany airlineCompany, Route route) {
         return flightService.createFlight(airlineCompany, route,
@@ -78,7 +75,7 @@ public class AirlineCompanyService {
                         .build());
     }
 
-    private static AirlineCompanyResponse getAirlineCompanyResponse(AirlineCompany airlineCompany) {
+    private AirlineCompanyResponse getAirlineCompanyResponse(AirlineCompany airlineCompany) {
         return AirlineCompanyResponse.builder()
                 .name(airlineCompany.getName())
                 .emailAddress(airlineCompany.getEmailAddress())
@@ -87,7 +84,6 @@ public class AirlineCompanyService {
                 .build();
     }
 
-    @Transactional
     private AirlineCompany getAirlineCompany(AirlineCompanyRequest airlineCompanyRequest) {
         return airlineCompanyRepository.save(AirlineCompany.builder()
                 .name(airlineCompanyRequest.getName())
